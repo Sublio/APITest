@@ -7,18 +7,25 @@
 //
 
 #import "ViewController.h"
+#import "DMServerManager.h"
 
 @interface ViewController ()
 
-@property (strong,nonatomic) NSArray* friendsArray;
+@property (strong,nonatomic) NSMutableArray* friendsArray;
 
 @end
 
 @implementation ViewController
 
+
+static NSInteger friendsRequest = 5;
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
+    
+    self.friendsArray = [NSMutableArray alloc];
+    [self getFriendsFromServer];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -31,7 +38,33 @@
 
 - (void) getFriendsFromServer {
     
-    
+    [[DMServerManager sharedManager] getFriendsWithOffset:[self.friendsArray count] count:friendsRequest onSuccess:^(NSArray *friends) {
+        
+        
+        [self.friendsArray addObjectsFromArray:friends];
+        //[self.tableView reloadData];
+        
+        
+        NSMutableArray* newPaths = [NSMutableArray array];
+        
+        for (int i= (int)[self.friendsArray count] - (int)[friends count]; i< [self.friendsArray count]; i++){
+        
+            
+            [newPaths addObject:[NSIndexPath indexPathForRow:i inSection:0]];
+            
+            
+            
+        }
+        
+        
+        [self.tableView beginUpdates];
+        [self.tableView insertRowsAtIndexPaths:newPaths withRowAnimation:UITableViewRowAnimationTop];
+        [self.tableView endUpdates];
+        
+        
+    } onFailure:^(NSError *error, NSInteger *statusCode) {
+        NSLog(@"error = %@, code = %d", [error localizedDescription], statusCode);
+    }];
     
 }
 
